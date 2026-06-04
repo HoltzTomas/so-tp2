@@ -130,8 +130,8 @@ void puts(const char *str) {
 
 uint8_t getchar(void) {
     char c = 0;
-    while (sys_read(STDIN, &c, 1) == 0)
-        ;
+    if (sys_read(STDIN, &c, 1) == 0)
+        return (uint8_t)EOF_CHAR;
     return (uint8_t)c;
 }
 
@@ -139,6 +139,8 @@ uint64_t readline(char *buf, uint64_t max_len) {
     uint64_t i = 0;
     while (i < max_len - 1) {
         char c = getchar();
+        if (c == (uint8_t)EOF_CHAR)
+            break;
         if (c == '\n') {
             putchar('\n');
             break;
