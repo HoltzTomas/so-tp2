@@ -72,6 +72,11 @@ command *all_commands[] = {
     &wc_cmd,
     &filter_cmd,
     &mvar_cmd,
+    &test_mm_cmd,
+    &test_processes_cmd,
+    &test_synchro_cmd,
+    &test_no_synchro_cmd,
+    &test_prio_cmd,
     &divzero_cmd,
     &invalidop_cmd,
     0
