@@ -5,6 +5,7 @@
 #include <videoDriver.h>
 #include <idtLoader.h>
 #include <exceptions.h>
+#include <memoryManager.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -58,8 +59,18 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
+#define STACK_PAGES 8
+
+static void initializeMemoryManager() {
+	uintptr_t heapStart = (uintptr_t)getStackBase();
+	uintptr_t heapEnd = (uintptr_t)sampleCodeModuleAddress;
+	uint32_t totalSize = (uint32_t)(heapEnd - heapStart);
+	mm_init(heapStart, totalSize);
+}
+
 int main() {
 	load_idt();
+	initializeMemoryManager();
 
 	set_restore_point((uint64_t)sampleCodeModuleAddress, getRSP(), getRBP());
 

@@ -2,6 +2,7 @@
 #include <videoDriver.h>
 #include <keyboardDriver.h>
 #include <time.h>
+#include <memoryManager.h>
 
 static uint64_t (*syscall_table[])(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t) = {
     [SYSCALL_READ]  = (uint64_t (*)(uint64_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t)) sys_read,
@@ -36,6 +37,17 @@ uint64_t intDispatcher(const registers_t *registers) {
             return 0;
         case SYSCALL_TICKS:
             return (uint64_t)ticks_elapsed();
+        case SYSCALL_MALLOC:
+            return (uint64_t)mm_alloc((uint32_t)registers->rdi);
+        case SYSCALL_FREE:
+            mm_free((void *)registers->rdi);
+            return 0;
+        case SYSCALL_MEMINFO: {
+            uint64_t *total = (uint64_t *)registers->rdi;
+            uint64_t *free_mem = (uint64_t *)registers->rsi;
+            mm_get_stats(total, free_mem);
+            return 0;
+        }
         default:
             return (uint64_t)-1;
     }
