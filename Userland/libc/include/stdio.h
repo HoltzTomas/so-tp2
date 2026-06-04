@@ -9,6 +9,7 @@
 #define STDERR 2
 
 #define EOF (-1)
+#define EOF_CHAR ((char)-1)
 
 // Syscall declarations (defined in asm)
 extern uint64_t sys_read(uint64_t fd, char *buf, uint64_t count);

@@ -17,7 +17,8 @@
 
 #define CTRL_PRESS 0x1D
 #define CTRL_RELEASE 0x9D
-#define NULL 0
+#define KEYBOARD_NULL 0
+#define EOF_CHAR ((char)-1)
 
 #define ARROW_UP 0x48
 #define ARROW_DOWN 0x50
@@ -29,16 +30,11 @@
 #define TAB_NUM 4
 #define BUFFER_SIZE 1000
 
-// Handler de interrupción del teclado
+void keyboard_init(void);
 void keyboard_handler(uint64_t rsp);
-
-// Devuelve el siguiente carácter del buffer de teclado, o 0 si está vacío
 char readNext();
-
-// Devuelve 1 si la tecla es una tecla de función (F1-F12)
+char readNextBlocking();
 char isFKey(unsigned int key);
-
-// Devuelve 1 si la tecla es una tecla especial (Shift, Ctrl, Alt, Caps Lock, Esc, F1-F12)
 char isSpecialKey(unsigned int key);
 
 #endif
