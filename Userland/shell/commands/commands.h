@@ -29,7 +29,6 @@ extern command test_processes_cmd;
 extern command test_synchro_cmd;
 extern command test_no_synchro_cmd;
 extern command test_prio_cmd;
-
 extern command *all_commands[];
 
 #endif

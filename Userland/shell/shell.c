@@ -188,7 +188,6 @@ static void execute_piped(ParsedInput *parsed) {
         printf("Failed to create pipe\n");
         return;
     }
-
     int16_t fds1[3] = {
         parsed->is_background ? DEV_NULL : STDIN,
         pipe_id,

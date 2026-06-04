@@ -3,6 +3,7 @@
 #include <list.h>
 #include <memoryManager.h>
 #include <globals.h>
+#include <pipe.h>
 
 static uint16_t get_next_pid(void);
 
@@ -126,6 +127,13 @@ int16_t create_process(MainFunction code, char **args, char *name,
 
     scheduler.processes[process->pid] = node;
 
+    for (int i = 0; i < 3; i++) {
+        if (fds[i] >= BUILT_IN_DESCRIPTORS) {
+            uint8_t mode = (i == 0) ? READ : WRITE;
+            pipe_open(process->pid, (uint16_t)fds[i], mode);
+        }
+    }
+
     while (scheduler.processes[scheduler.next_unused_pid] != NULL)
         scheduler.next_unused_pid = (scheduler.next_unused_pid + 1) % MAX_PROCESSES;
 
@@ -239,6 +247,12 @@ int32_t kill_process(uint16_t pid, int32_t retval) {
 
         free_process(zombie_child);
         mm_free(zombie_child);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        if (process->file_descriptors[i] >= BUILT_IN_DESCRIPTORS) {
+            pipe_close(pid, (uint16_t)process->file_descriptors[i]);
+        }
     }
 
     process->status = ZOMBIE;
