@@ -3,6 +3,7 @@
 
 #define MAX_BUFFER_SIZE 256
 #define PROMPT "$ "
+#define MAX_PS_ENTRIES 20
 
 extern void throw_zero_division(void);
 extern void throw_invalid_opcode(void);
@@ -19,12 +20,15 @@ typedef struct {
 
 extern void sys_time(Timestamp *ts);
 
+static const char *status_names[] = {"READY", "RUNNING", "BLOCKED", "ZOMBIE"};
+
 static void cmd_help(void) {
     printf("Available commands:\n");
     printf("  help        - Show this help\n");
     printf("  clear       - Clear screen\n");
     printf("  time        - Show current time\n");
     printf("  mem         - Show memory info\n");
+    printf("  ps          - Show running processes\n");
     printf("  divzero     - Test zero division exception\n");
     printf("  invalidop   - Test invalid opcode exception\n");
 }
@@ -37,8 +41,35 @@ static void cmd_time(void) {
            ts.hours, ts.minutes, ts.seconds);
 }
 
+static void cmd_mem(void) {
+    uint64_t total = 0, free_mem = 0;
+    sys_mem_info(&total, &free_mem);
+    printf("Total: %d bytes\n", (int)total);
+    printf("Used:  %d bytes\n", (int)(total - free_mem));
+    printf("Free:  %d bytes\n", (int)free_mem);
+}
+
+static void cmd_ps(void) {
+    ProcessInfo info[MAX_PS_ENTRIES];
+    int32_t count = sys_ps(info, MAX_PS_ENTRIES);
+    if (count <= 0) {
+        printf("No processes found.\n");
+        return;
+    }
+
+    printf("PID  PPID  PRIO  STATUS   FG  NAME\n");
+    printf("---  ----  ----  ------   --  ----\n");
+    for (int i = 0; i < count; i++) {
+        const char *st = (info[i].status < 4) ? status_names[info[i].status] : "???";
+        printf("%d    %d     %d     %s  %s  %s\n",
+               info[i].pid, info[i].parent_pid, info[i].priority,
+               st,
+               info[i].is_foreground ? "Y" : "N",
+               info[i].name);
+    }
+}
+
 static void process_command(char *input) {
-    // Skip leading whitespace
     while (*input == ' ' || *input == '\t') input++;
     if (*input == '\0') return;
 
@@ -49,11 +80,9 @@ static void process_command(char *input) {
     } else if (strcmp(input, "time") == 0) {
         cmd_time();
     } else if (strcmp(input, "mem") == 0) {
-        uint64_t total = 0, free_mem = 0;
-        sys_mem_info(&total, &free_mem);
-        printf("Total: %d bytes\n", (int)total);
-        printf("Used:  %d bytes\n", (int)(total - free_mem));
-        printf("Free:  %d bytes\n", (int)free_mem);
+        cmd_mem();
+    } else if (strcmp(input, "ps") == 0) {
+        cmd_ps();
     } else if (strcmp(input, "divzero") == 0) {
         throw_zero_division();
     } else if (strcmp(input, "invalidop") == 0) {
@@ -63,7 +92,7 @@ static void process_command(char *input) {
     }
 }
 
-void start(void) {
+int start(int argc, char **argv) {
     char buffer[MAX_BUFFER_SIZE];
 
     printf("SO TP2 - Kernel Shell\n");
@@ -76,4 +105,5 @@ void start(void) {
             process_command(buffer);
         }
     }
+    return 0;
 }

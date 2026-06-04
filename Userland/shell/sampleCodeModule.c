@@ -1,6 +1,6 @@
-extern void start(void);
+extern int start(int argc, char **argv);
 
 int main() {
-    start();
+    start(0, (char **)0);
     return 0;
 }
