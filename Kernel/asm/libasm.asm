@@ -12,6 +12,7 @@ GLOBAL outb
 GLOBAL inb
 GLOBAL getRSP
 GLOBAL getRBP
+GLOBAL _xchg
 
 section .text
 
@@ -90,5 +91,10 @@ restore_context:
 	mov rsp, rsi
 	mov rax, rdi
 	jmp rax
+
+_xchg:
+	mov eax, esi
+	xchg [rdi], eax
+	ret
 
 section .note.GNU-stack noalloc noexec nowrite progbits
