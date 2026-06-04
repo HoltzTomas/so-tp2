@@ -6,6 +6,7 @@
 #include <scheduler.h>
 #include <globals.h>
 #include <semaphore.h>
+#include <pipe.h>
 
 uint64_t intDispatcher(const registers_t *registers) {
     uint64_t syscall_num = registers->rax;
@@ -96,12 +97,29 @@ uint64_t intDispatcher(const registers_t *registers) {
             return (uint64_t)(int64_t)sem_wait((uint16_t)registers->rdi);
         case SYSCALL_SEM_POST:
             return (uint64_t)(int64_t)sem_post((uint16_t)registers->rdi);
+        case SYSCALL_PIPE_CREATE:
+            return (uint64_t)(int64_t)pipe_create();
+        case SYSCALL_PIPE_OPEN:
+            return (uint64_t)(int64_t)pipe_open((uint16_t)registers->rdi, (uint16_t)registers->rsi, (uint8_t)registers->rdx);
+        case SYSCALL_PIPE_CLOSE:
+            return (uint64_t)(int64_t)pipe_close((uint16_t)registers->rdi, (uint16_t)registers->rsi);
         default:
             return (uint64_t)-1;
     }
 }
 
 uint64_t sys_read(uint64_t fd, uint64_t buf, uint64_t count) {
+    Process *current = get_current_process();
+
+    if (current != NULL && fd == STDIN) {
+        int16_t actual_fd = current->file_descriptors[0];
+        if (actual_fd >= BUILT_IN_DESCRIPTORS)
+            return (uint64_t)pipe_read((uint16_t)actual_fd, (char *)buf, count);
+        if (actual_fd == DEV_NULL)
+            return 0;
+        fd = (uint64_t)actual_fd;
+    }
+
     if (fd != 0)
         return (uint64_t)-1;
 
@@ -115,6 +133,15 @@ uint64_t sys_read(uint64_t fd, uint64_t buf, uint64_t count) {
 }
 
 uint64_t sys_write(uint64_t fd, uint64_t buf, uint64_t count) {
+    Process *current = get_current_process();
+
+    if (current != NULL && fd <= 2) {
+        int16_t actual_fd = current->file_descriptors[fd == 2 ? 2 : 1];
+        if (actual_fd >= BUILT_IN_DESCRIPTORS)
+            return (uint64_t)pipe_write((uint16_t)actual_fd, (const char *)buf, count);
+        fd = (uint64_t)actual_fd;
+    }
+
     if (fd != 1 && fd != 2)
         return (uint64_t)-1;
 

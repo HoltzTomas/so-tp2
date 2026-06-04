@@ -59,4 +59,9 @@ extern int8_t sys_sem_destroy(uint16_t id);
 extern int8_t sys_sem_wait(uint16_t id);
 extern int8_t sys_sem_post(uint16_t id);
 
+// Pipe management
+extern int16_t sys_pipe_create(void);
+extern int8_t sys_pipe_open(uint16_t pid, uint16_t pipe_id, uint8_t mode);
+extern int8_t sys_pipe_close(uint16_t pid, uint16_t pipe_id);
+
 #endif
