@@ -24,6 +24,11 @@ extern command cat_cmd;
 extern command wc_cmd;
 extern command filter_cmd;
 extern command mvar_cmd;
+extern command test_mm_cmd;
+extern command test_processes_cmd;
+extern command test_synchro_cmd;
+extern command test_no_synchro_cmd;
+extern command test_prio_cmd;
 
 extern command *all_commands[];
 
