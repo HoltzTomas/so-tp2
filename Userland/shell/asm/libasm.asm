@@ -22,6 +22,9 @@ GLOBAL sys_sem_close
 GLOBAL sys_sem_destroy
 GLOBAL sys_sem_wait
 GLOBAL sys_sem_post
+GLOBAL sys_pipe_create
+GLOBAL sys_pipe_open
+GLOBAL sys_pipe_close
 GLOBAL throw_zero_division
 GLOBAL throw_invalid_opcode
 
@@ -144,6 +147,18 @@ sys_sem_wait:
 ; int8_t sys_sem_post(uint16_t id)
 sys_sem_post:
     do_syscall 23
+
+; int16_t sys_pipe_create(void)
+sys_pipe_create:
+    do_syscall 24
+
+; int8_t sys_pipe_open(uint16_t pid, uint16_t pipe_id, uint8_t mode)
+sys_pipe_open:
+    do_syscall 25
+
+; int8_t sys_pipe_close(uint16_t pid, uint16_t pipe_id)
+sys_pipe_close:
+    do_syscall 26
 
 throw_zero_division:
     mov rax, 0

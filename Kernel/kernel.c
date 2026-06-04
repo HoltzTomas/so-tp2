@@ -10,6 +10,7 @@
 #include <globals.h>
 #include <stddef.h>
 #include <semaphore.h>
+#include <pipe.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -78,6 +79,7 @@ int main() {
 
 	scheduler_init();
 	semaphore_manager_init();
+	pipe_manager_init();
 
 	int16_t default_fds[3] = {STDIN, STDOUT, STDERR};
 	create_process(idle_process, NULL, "idle", 0, default_fds, 1);
