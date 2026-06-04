@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # Detectar el sistema operativo
 OS=$(uname -s)
