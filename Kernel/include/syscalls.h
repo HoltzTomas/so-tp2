@@ -23,6 +23,12 @@
 #define SYSCALL_NICE            15
 #define SYSCALL_PS              16
 #define SYSCALL_SLEEP           17
+#define SYSCALL_SEM_INIT        18
+#define SYSCALL_SEM_OPEN        19
+#define SYSCALL_SEM_CLOSE       20
+#define SYSCALL_SEM_DESTROY     21
+#define SYSCALL_SEM_WAIT        22
+#define SYSCALL_SEM_POST        23
 
 uint64_t intDispatcher(const registers_t *registers);
 

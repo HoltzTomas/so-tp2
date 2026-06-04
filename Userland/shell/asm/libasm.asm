@@ -16,6 +16,12 @@ GLOBAL sys_waitpid
 GLOBAL sys_nice
 GLOBAL sys_ps
 GLOBAL sys_sleep
+GLOBAL sys_sem_init
+GLOBAL sys_sem_open
+GLOBAL sys_sem_close
+GLOBAL sys_sem_destroy
+GLOBAL sys_sem_wait
+GLOBAL sys_sem_post
 GLOBAL throw_zero_division
 GLOBAL throw_invalid_opcode
 
@@ -114,6 +120,30 @@ sys_ps:
 ; void sys_sleep(uint64_t ticks)
 sys_sleep:
     do_syscall 17
+
+; int8_t sys_sem_init(uint16_t id, uint32_t initial_value)
+sys_sem_init:
+    do_syscall 18
+
+; int8_t sys_sem_open(uint16_t id)
+sys_sem_open:
+    do_syscall 19
+
+; int8_t sys_sem_close(uint16_t id)
+sys_sem_close:
+    do_syscall 20
+
+; int8_t sys_sem_destroy(uint16_t id)
+sys_sem_destroy:
+    do_syscall 21
+
+; int8_t sys_sem_wait(uint16_t id)
+sys_sem_wait:
+    do_syscall 22
+
+; int8_t sys_sem_post(uint16_t id)
+sys_sem_post:
+    do_syscall 23
 
 throw_zero_division:
     mov rax, 0

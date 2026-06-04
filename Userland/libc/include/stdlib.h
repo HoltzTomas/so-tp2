@@ -51,4 +51,12 @@ extern int64_t sys_nice(uint16_t pid, uint8_t new_priority);
 extern int32_t sys_ps(ProcessInfo *info, uint32_t max_count);
 extern void sys_sleep(uint64_t ticks);
 
+// Semaphore management
+extern int8_t sys_sem_init(uint16_t id, uint32_t initial_value);
+extern int8_t sys_sem_open(uint16_t id);
+extern int8_t sys_sem_close(uint16_t id);
+extern int8_t sys_sem_destroy(uint16_t id);
+extern int8_t sys_sem_wait(uint16_t id);
+extern int8_t sys_sem_post(uint16_t id);
+
 #endif
