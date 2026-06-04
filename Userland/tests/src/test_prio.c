@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <test_util.h>
 
-#define MINOR_WAIT 1000000
-#define WAIT 10000000
+#define MINOR_WAIT 100000
+#define WAIT_TICKS 90
 
 static int64_t prio[4];
 
@@ -21,6 +21,8 @@ int test_prio(int argc, char *argv[]) {
 	int16_t default_fds[3] = {STDIN, STDOUT, STDERR};
 	char *argvAux[] = {0};
 
+	printf("Creating 4 processes with same priority...\n");
+
 	for (int i = 0; i < 4; i++) {
 		prio[i] = sys_create_process(
 			(MainFunction)endless_loop_print, argvAux, "prio_test", 0, default_fds);
@@ -30,19 +32,16 @@ int test_prio(int argc, char *argv[]) {
 		}
 	}
 
-	bussy_wait(WAIT);
+	sys_sleep(WAIT_TICKS);
 	printf("\nChanging priorities...\n");
+	printf("PID %d -> prio 0, PID %d -> prio 1, PID %d -> prio 2, PID %d -> prio 3\n",
+	       (int)prio[0], (int)prio[1], (int)prio[2], (int)prio[3]);
 
 	for (int i = 0; i < 4; i++) {
-		switch (i % 4) {
-		case 0: sys_nice((uint16_t)prio[i], 0); break;
-		case 1: sys_nice((uint16_t)prio[i], 1); break;
-		case 2: sys_nice((uint16_t)prio[i], 2); break;
-		case 3: sys_nice((uint16_t)prio[i], 3); break;
-		}
+		sys_nice((uint16_t)prio[i], (uint8_t)i);
 	}
 
-	bussy_wait(WAIT);
+	sys_sleep(WAIT_TICKS);
 	printf("\nKilling test processes...\n");
 
 	for (int i = 0; i < 4; i++) {
