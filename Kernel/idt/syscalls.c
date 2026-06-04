@@ -144,6 +144,8 @@ uint64_t sys_write(uint64_t fd, uint64_t buf, uint64_t count) {
         int16_t actual_fd = current->file_descriptors[fd == 2 ? 2 : 1];
         if (actual_fd >= BUILT_IN_DESCRIPTORS)
             return (uint64_t)pipe_write((uint16_t)actual_fd, (const char *)buf, count);
+        if (actual_fd == DEV_NULL)
+            return count;
         fd = (uint64_t)actual_fd;
     }
 
