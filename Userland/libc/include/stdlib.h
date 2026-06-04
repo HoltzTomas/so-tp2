@@ -13,9 +13,42 @@ int strncmp(const char *s1, const char *s2, uint64_t n);
 void *memset(void *dest, int c, uint64_t n);
 void *memcpy(void *dest, const void *src, uint64_t n);
 
-// Memory management (syscall wrappers)
+// Memory management
 extern void *sys_malloc(uint64_t size);
 extern void sys_free(void *ptr);
 extern void sys_mem_info(uint64_t *total, uint64_t *free);
+
+// Process status enum (mirrors kernel)
+typedef enum {
+    READY = 0,
+    RUNNING,
+    BLOCKED,
+    ZOMBIE
+} ProcessStatus;
+
+typedef struct {
+    uint16_t pid;
+    uint16_t parent_pid;
+    char name[64];
+    uint8_t priority;
+    ProcessStatus status;
+    void *stack_base;
+    void *stack_pos;
+    uint8_t is_foreground;
+} ProcessInfo;
+
+typedef int (*MainFunction)(int argc, char **args);
+
+// Process management
+extern int64_t sys_create_process(MainFunction code, char **args, char *name, uint8_t priority, int16_t *fds);
+extern uint64_t sys_getpid(void);
+extern int64_t sys_kill(uint16_t pid, int32_t retval);
+extern int64_t sys_block(uint16_t pid);
+extern int64_t sys_unblock(uint16_t pid);
+extern void sys_yield(void);
+extern int64_t sys_waitpid(uint16_t pid);
+extern int64_t sys_nice(uint16_t pid, uint8_t new_priority);
+extern int32_t sys_ps(ProcessInfo *info, uint32_t max_count);
+extern void sys_sleep(uint64_t ticks);
 
 #endif

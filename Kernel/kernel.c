@@ -6,6 +6,9 @@
 #include <idtLoader.h>
 #include <exceptions.h>
 #include <memoryManager.h>
+#include <scheduler.h>
+#include <globals.h>
+#include <stddef.h>
 
 extern uint8_t text;
 extern uint8_t rodata;
@@ -13,15 +16,17 @@ extern uint8_t data;
 extern uint8_t bss;
 extern uint8_t endOfKernelBinary;
 extern uint8_t endOfKernel;
-extern uint64_t getRSP();
-extern uint64_t getRBP();
 
 static const uint64_t PageSize = 0x1000;
+#define STACK_PAGES 8
 
 static void * const sampleCodeModuleAddress = (void*)0x400000;
 static void * const sampleDataModuleAddress = (void*)0x500000;
 
 typedef int (*EntryPoint)();
+
+extern int idle_process(int argc, char **argv);
+extern void _sti();
 
 void clearBSS(void * bssAddress, uint64_t bssSize) {
 	memset(bssAddress, 0, bssSize);
@@ -30,7 +35,7 @@ void clearBSS(void * bssAddress, uint64_t bssSize) {
 void * getStackBase() {
 	return (void*)(
 		(uint64_t)&endOfKernel
-		+ PageSize * 8				// Stack size: 32KiB
+		+ PageSize * STACK_PAGES
 		- sizeof(uint64_t)
 	);
 }
@@ -59,8 +64,6 @@ void * initializeKernelBinary() {
 	return getStackBase();
 }
 
-#define STACK_PAGES 8
-
 static void initializeMemoryManager() {
 	uintptr_t heapStart = (uintptr_t)getStackBase();
 	uintptr_t heapEnd = (uintptr_t)sampleCodeModuleAddress;
@@ -72,9 +75,16 @@ int main() {
 	load_idt();
 	initializeMemoryManager();
 
-	set_restore_point((uint64_t)sampleCodeModuleAddress, getRSP(), getRBP());
+	scheduler_init();
 
-	((EntryPoint)sampleCodeModuleAddress)();
+	int16_t default_fds[3] = {STDIN, STDOUT, STDERR};
+	create_process(idle_process, NULL, "idle", 0, default_fds, 1);
+
+	EntryPoint entryPoint = (EntryPoint)sampleCodeModuleAddress;
+	create_process((MainFunction)entryPoint, NULL, "shell", 2, default_fds, 0);
+
+	_sti();
+	yield();
 
 	return 0;
 }

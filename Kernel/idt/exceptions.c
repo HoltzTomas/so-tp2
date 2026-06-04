@@ -4,14 +4,7 @@
 #include <keyboardDriver.h>
 #include <stdint.h>
 #include <interrupts.h>
-
-extern void restore_context(uint64_t rip, uint64_t rsp, uint64_t rbp);
-
-typedef struct {
-	uint64_t rip, rsp, rbp;
-} restore_point;
-
-static restore_point rp;
+#include <scheduler.h>
 
 static void printRegistersFromStack(const registers_t *regs);
 
@@ -35,7 +28,7 @@ void exceptionDispatcher(int exception, uint64_t *rsp) {
 		_hlt();
 	}
 	clear_screen(0);
-	restore_context(rp.rip, rp.rsp, rp.rbp);
+	kill_current_process(-1);
 }
 
 static void printRegistersFromStack(const registers_t *regs) {
@@ -59,7 +52,5 @@ static void printRegistersFromStack(const registers_t *regs) {
 }
 
 void set_restore_point(uint64_t rip, uint64_t rsp, uint64_t rbp) {
-	rp.rip = rip;
-	rp.rsp = rsp;
-	rp.rbp = rbp;
+	(void)rip; (void)rsp; (void)rbp;
 }

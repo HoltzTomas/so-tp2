@@ -4,6 +4,7 @@ GLOBAL picMasterMask
 GLOBAL picSlaveMask
 GLOBAL haltcpu
 GLOBAL _hlt
+GLOBAL _initialize_stack_frame
 
 GLOBAL _irq00Handler
 GLOBAL _irq01Handler
@@ -16,11 +17,10 @@ GLOBAL _exception6Handler
 EXTERN irqDispatcher
 EXTERN intDispatcher
 EXTERN exceptionDispatcher
+EXTERN schedule
 
 SECTION .text
 
-; Push order: rax first (deepest), r15 last (top of stack)
-; This means rsp[0] = rax after pushState
 %macro pushState 0
 	push r15
 	push r14
@@ -57,7 +57,6 @@ SECTION .text
 	pop r15
 %endmacro
 
-; Skip rax restore so the C return value in rax is preserved
 %macro popStateWithoutRax 0
 	add rsp, 8
 	pop rbx
@@ -130,17 +129,30 @@ picSlaveMask:
 	pop rbp
 	retn
 
-; Timer tick handler (IRQ0)
+; Timer tick handler (IRQ0) — includes context switch
 _irq00Handler:
-	irqHandlerMaster 0
+	pushState
+
+	mov rdi, 0
+	mov rsi, rsp
+	call irqDispatcher
+
+	; Context switch: pass current rsp, get new rsp back
+	mov rdi, rsp
+	call schedule
+	mov rsp, rax
+
+	mov al, 20h
+	out 20h, al
+
+	popState
+	iretq
 
 ; Keyboard handler (IRQ1)
 _irq01Handler:
 	irqHandlerMaster 1
 
 ; Syscall handler (int 80h)
-; Convention: rax = syscall number, args in rdi, rsi, rdx, r10, r8, r9
-; Return value in rax (preserved by popStateWithoutRax)
 _int80Handler:
 	pushState
 	mov rdi, rsp
@@ -159,6 +171,36 @@ _exception6Handler:
 haltcpu:
 	cli
 	hlt
+	ret
+
+; _initialize_stack_frame(wrapper, code, stack_top, args)
+;   rdi = wrapper function pointer
+;   rsi = code function pointer (actual process entry)
+;   rdx = top of new stack
+;   rcx = args pointer
+; Returns: rsp value for the new process (in rax)
+_initialize_stack_frame:
+	mov r8, rsp
+	mov r9, rbp
+
+	mov rsp, rdx
+	mov rbp, rdx
+
+	; Fake iretq frame: SS, RSP, RFLAGS, CS, RIP
+	push 0x0          ; SS
+	push rdx          ; RSP (top of stack)
+	push 0x202        ; RFLAGS (IF set)
+	push 0x8          ; CS
+	push rdi          ; RIP = wrapper
+
+	; Set up args for wrapper: rdi=code, rsi=args
+	mov rdi, rsi      ; rdi = code
+	mov rsi, rcx      ; rsi = args
+	pushState
+
+	mov rax, rsp      ; return new stack pointer
+	mov rsp, r8
+	mov rbp, r9
 	ret
 
 SECTION .bss
