@@ -13,4 +13,9 @@ int strncmp(const char *s1, const char *s2, uint64_t n);
 void *memset(void *dest, int c, uint64_t n);
 void *memcpy(void *dest, const void *src, uint64_t n);
 
+// Memory management (syscall wrappers)
+extern void *sys_malloc(uint64_t size);
+extern void sys_free(void *ptr);
+extern void sys_mem_info(uint64_t *total, uint64_t *free);
+
 #endif

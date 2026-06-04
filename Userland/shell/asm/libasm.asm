@@ -3,6 +3,9 @@ GLOBAL sys_write
 GLOBAL sys_clear
 GLOBAL sys_time
 GLOBAL sys_ticks
+GLOBAL sys_malloc
+GLOBAL sys_free
+GLOBAL sys_mem_info
 GLOBAL throw_zero_division
 GLOBAL throw_invalid_opcode
 
@@ -42,6 +45,18 @@ sys_clear:
 ; uint64_t sys_ticks(void)
 sys_ticks:
     do_syscall 4
+
+; void *sys_malloc(uint64_t size)
+sys_malloc:
+    do_syscall 5
+
+; void sys_free(void *ptr)
+sys_free:
+    do_syscall 6
+
+; void sys_mem_info(uint64_t *total, uint64_t *free)
+sys_mem_info:
+    do_syscall 7
 
 throw_zero_division:
     mov rax, 0
