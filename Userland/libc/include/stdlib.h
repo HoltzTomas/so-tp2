@@ -10,8 +10,14 @@ int strcmp(const char *str1, const char *str2);
 uint64_t strlen(const char *str);
 char *strcpy(char *dest, const char *src);
 int strncmp(const char *s1, const char *s2, uint64_t n);
+char *strcat(char *dest, const char *src);
+char *strchr(const char *s, int c);
+char *strtok(char *str, const char *delim);
+char tolower(char c);
+uint32_t rand(void);
 void *memset(void *dest, int c, uint64_t n);
 void *memcpy(void *dest, const void *src, uint64_t n);
+void sleep(uint64_t seconds);
 
 // Memory management
 extern void *sys_malloc(uint64_t size);
