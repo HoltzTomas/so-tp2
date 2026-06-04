@@ -5,6 +5,7 @@
 #include <memoryManager.h>
 #include <scheduler.h>
 #include <globals.h>
+#include <semaphore.h>
 
 uint64_t intDispatcher(const registers_t *registers) {
     uint64_t syscall_num = registers->rax;
@@ -83,6 +84,18 @@ uint64_t intDispatcher(const registers_t *registers) {
                 _hlt();
             return 0;
         }
+        case SYSCALL_SEM_INIT:
+            return (uint64_t)(int64_t)sem_init((uint16_t)registers->rdi, (uint32_t)registers->rsi);
+        case SYSCALL_SEM_OPEN:
+            return (uint64_t)(int64_t)sem_open((uint16_t)registers->rdi);
+        case SYSCALL_SEM_CLOSE:
+            return (uint64_t)(int64_t)sem_close((uint16_t)registers->rdi);
+        case SYSCALL_SEM_DESTROY:
+            return (uint64_t)(int64_t)sem_destroy((uint16_t)registers->rdi);
+        case SYSCALL_SEM_WAIT:
+            return (uint64_t)(int64_t)sem_wait((uint16_t)registers->rdi);
+        case SYSCALL_SEM_POST:
+            return (uint64_t)(int64_t)sem_post((uint16_t)registers->rdi);
         default:
             return (uint64_t)-1;
     }
