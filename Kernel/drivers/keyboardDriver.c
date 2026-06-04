@@ -2,16 +2,20 @@
 #include <naiveConsole.h>
 #include <videoDriver.h>
 #include <registers.h>
+#include <scheduler.h>
+#include <globals.h>
 
-uint8_t readKeyFromPort();  // Declaración de la función en ASM
+uint8_t readKeyFromPort();
 
 static char buffer[BUFFER_SIZE] = {0};
 static int currentKey = 0;
 static int nextToRead = 0;
-int shift = 0;
-int capsLock = 0;
-static int extended_prefix = 0; // 1 si el último scancode fue 0xE0 (tecla extendida)
-static int ctrl = 0; // estado de Ctrl
+static int shift = 0;
+static int capsLock = 0;
+static int extended_prefix = 0;
+static int ctrl = 0;
+
+static int16_t keyboard_waiting_pid = -1;
 
 static unsigned char keyValues[KEYS][2] = {
 	{0, 0},
@@ -74,6 +78,9 @@ static unsigned char keyValues[KEYS][2] = {
 	{' ', ' '},
 };
 
+void keyboard_init(void) {
+	keyboard_waiting_pid = -1;
+}
 
 char isFKey(unsigned int key){
 	return (key >= 0x3B && key <= 0x44) || key == 0x57 || key == 0x58;
@@ -84,51 +91,67 @@ char isSpecialKey(unsigned int key){
 		   key == CAPS_LOCK_PRESS || key == ALT_PRESS || isFKey(key) || key == ESC;
 }
 
+static void enqueue_char(char c) {
+	if (((currentKey + 1) % BUFFER_SIZE) != nextToRead) {
+		buffer[currentKey] = c;
+		currentKey = (currentKey + 1) % BUFFER_SIZE;
+
+		if (keyboard_waiting_pid >= 0) {
+			set_status((uint16_t)keyboard_waiting_pid, READY);
+			keyboard_waiting_pid = -1;
+		}
+	}
+}
+
 char readNext() {
     if (nextToRead == currentKey) {
-        return 0; // Buffer vacío
+        return 0;
     }
     unsigned char ret = buffer[nextToRead];
     nextToRead = (nextToRead + 1) % BUFFER_SIZE;
     return ret;
 }
 
+char readNextBlocking() {
+	char c = readNext();
+	while (c == 0) {
+		keyboard_waiting_pid = (int16_t)get_pid();
+		set_status(get_pid(), BLOCKED);
+		yield();
+		c = readNext();
+	}
+	return c;
+}
+
 void keyboard_handler(uint64_t rsp) {
     unsigned int key = readKeyFromPort();
     
-	// Manejo de prefijo extendido (0xE0) para flechas y otras teclas
-    if (key == 0xE0) {
+	if (key == 0xE0) {
 		extended_prefix = 1;
 		return;
 	}
     
 	if (extended_prefix) {
-		// Manejo de modificadores extendidos (Right Ctrl: 0xE0 0x1D / 0xE0 0x9D)
-		if (key == 0x1D) { // Right Ctrl press
+		if (key == 0x1D) {
 			ctrl = 1;
 			extended_prefix = 0;
 			return;
 		}
-		if (key == 0x9D) { // Right Ctrl release
+		if (key == 0x9D) {
 			ctrl = 0;
 			extended_prefix = 0;
 			return;
 		}
-		// Para otras teclas extendidas, ignoramos releases (bit 7) y tratamos makes
 		if (key & 0x80) {
-			extended_prefix = 0; // release de tecla extendida
+			extended_prefix = 0;
 			return;
 		}
 		
         if (key == ARROW_UP || key == ARROW_DOWN || key == ARROW_LEFT || key == ARROW_RIGHT) {
-            if (((currentKey + 1) % BUFFER_SIZE) != nextToRead) {
-                buffer[currentKey] = (char)(0x80 | key); // marcar como tecla especial fuera de ASCII
-                currentKey = (currentKey + 1) % BUFFER_SIZE;
-            }
+			enqueue_char((char)(0x80 | key));
             extended_prefix = 0;
 			return;
 		}
-		// Tecla extendida no manejada: limpiar prefijo y continuar
 		extended_prefix = 0;
 	}
     
@@ -150,22 +173,29 @@ void keyboard_handler(uint64_t rsp) {
 		case CTRL_RELEASE:
 			ctrl = 0;
 			return;
-		// Algunas BIOS/teclados pueden generar flechas/PgUp/PgDn como no-extendidas en ciertas configuraciones
-        case 0x48: // Arrow Up
-        case 0x50: // Arrow Down
-        case 0x49: // PgUp
-        case 0x51: // PgDn
-			// Solo encolar como scancode para userland
-			if (((currentKey + 1) % BUFFER_SIZE) != nextToRead) {
-                buffer[currentKey] = (char)(0x80 | key); // marcar como especial
-				currentKey = (currentKey + 1) % BUFFER_SIZE;
-			}
+        case 0x48:
+        case 0x50:
+        case 0x49:
+        case 0x51:
+			enqueue_char((char)(0x80 | key));
             return;
 	}
 
 	if (key & 0x80) {
         return;
     }
+
+	if (ctrl && key < KEYS && key <= MAX_PRESS_KEY) {
+		char base = keyValues[key][0];
+		if (base == 'c') {
+			kill_foreground_process();
+			return;
+		}
+		if (base == 'd') {
+			enqueue_char(EOF_CHAR);
+			return;
+		}
+	}
 
 	if (key < KEYS && key <= MAX_PRESS_KEY && !isSpecialKey(key)) {
 		int index;
@@ -175,10 +205,6 @@ void keyboard_handler(uint64_t rsp) {
 			index = shift;
 		}
 		char charToAdd = keyValues[key][index];
-
-        if (((currentKey + 1) % BUFFER_SIZE) != nextToRead) {
-            buffer[currentKey] = charToAdd;
-            currentKey = (currentKey + 1) % BUFFER_SIZE;
-        }
+		enqueue_char(charToAdd);
 	}
 }

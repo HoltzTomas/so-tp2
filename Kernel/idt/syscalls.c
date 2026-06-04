@@ -7,6 +7,7 @@
 #include <globals.h>
 #include <semaphore.h>
 #include <pipe.h>
+#include <stddef.h>
 
 uint64_t intDispatcher(const registers_t *registers) {
     uint64_t syscall_num = registers->rax;
@@ -124,10 +125,14 @@ uint64_t sys_read(uint64_t fd, uint64_t buf, uint64_t count) {
         return (uint64_t)-1;
 
     char *buffer = (char *)buf;
-    unsigned char c;
     uint64_t i;
-    for (i = 0; i < count && (c = readNext()) != 0; i++) {
+    for (i = 0; i < count; i++) {
+        char c = readNextBlocking();
+        if (c == EOF_CHAR)
+            break;
         buffer[i] = c;
+        if (c == '\n')
+            return i + 1;
     }
     return i;
 }
