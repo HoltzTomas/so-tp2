@@ -24,6 +24,7 @@ static void cmd_help(void) {
     printf("  help        - Show this help\n");
     printf("  clear       - Clear screen\n");
     printf("  time        - Show current time\n");
+    printf("  mem         - Show memory info\n");
     printf("  divzero     - Test zero division exception\n");
     printf("  invalidop   - Test invalid opcode exception\n");
 }
@@ -47,6 +48,12 @@ static void process_command(char *input) {
         sys_clear(0);
     } else if (strcmp(input, "time") == 0) {
         cmd_time();
+    } else if (strcmp(input, "mem") == 0) {
+        uint64_t total = 0, free_mem = 0;
+        sys_mem_info(&total, &free_mem);
+        printf("Total: %d bytes\n", (int)total);
+        printf("Used:  %d bytes\n", (int)(total - free_mem));
+        printf("Free:  %d bytes\n", (int)free_mem);
     } else if (strcmp(input, "divzero") == 0) {
         throw_zero_division();
     } else if (strcmp(input, "invalidop") == 0) {
