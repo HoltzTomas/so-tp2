@@ -29,6 +29,9 @@
 #define SYSCALL_SEM_DESTROY     21
 #define SYSCALL_SEM_WAIT        22
 #define SYSCALL_SEM_POST        23
+#define SYSCALL_PIPE_CREATE     24
+#define SYSCALL_PIPE_OPEN       25
+#define SYSCALL_PIPE_CLOSE      26
 
 uint64_t intDispatcher(const registers_t *registers);
 
