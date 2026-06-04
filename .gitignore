@@ -1,0 +1,9 @@
+*.o
+*.bin
+*.elf
+*.img
+*.vmdk
+*.qcow2
+*.sys
+.DS_Store
+.vscode/
