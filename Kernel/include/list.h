@@ -21,6 +21,8 @@ void *list_remove(List *list, Node *node);
 Node *list_get_first(List *list);
 int list_is_empty(List *list);
 
+void list_move_to_tail(List *list, Node *node);
+
 void list_begin(List *list);
 int list_has_next(List *list);
 void *list_next(List *list);
