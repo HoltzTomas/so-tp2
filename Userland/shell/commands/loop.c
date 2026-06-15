@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void busy_wait(uint64_t n) {
+	for (volatile uint64_t i = 0; i < n; i++);
+}
+
 static int loop_func(int argc, char **argv) {
 	if (argc != 2) {
 		printf("Usage: loop <seconds>\n");
@@ -20,7 +24,7 @@ static int loop_func(int argc, char **argv) {
 	while (1) {
 		printf("[PID %d] Hello from loop! (iteration %d)\n", (int)pid, count);
 		count++;
-		sleep(seconds);
+		busy_wait((uint64_t)seconds * 10000000);
 	}
 
 	return 0;

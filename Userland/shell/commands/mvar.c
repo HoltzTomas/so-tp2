@@ -45,7 +45,6 @@ static int writer_process(int argc, char **argv) {
 
 static int reader_process(int argc, char **argv) {
 	if (argc < 1) return -1;
-	int reader_id = (int)atoi(argv[0]);
 
 	if (sys_sem_open(MVAR_MUTEX) < 0 ||
 	    sys_sem_open(MVAR_READ_SEM) < 0 ||
@@ -61,7 +60,7 @@ static int reader_process(int argc, char **argv) {
 		char value = shared_mvar;
 		if (sys_sem_post(MVAR_MUTEX) < 0) return -1;
 		if (sys_sem_post(MVAR_WRITE_SEM) < 0) return -1;
-		printf(" [%d]%c ", reader_id, value);
+		putchar(value);
 	}
 	return 0;
 }

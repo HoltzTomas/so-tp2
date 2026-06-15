@@ -1,5 +1,6 @@
 #include <videoDriver.h>
 #include <lib.h>
+#include <stdint.h>
 
 #define SCROLL_LINES 8
 
@@ -72,7 +73,7 @@ uint16_t get_screen_height() {
 }
 
 void putPixel(uint32_t hexColor, uint64_t x, uint64_t y) {
-    uint8_t * framebuffer = (uint8_t *) VBE_mode_info->framebuffer;
+    uint8_t * framebuffer = (uint8_t *)(uintptr_t) VBE_mode_info->framebuffer;
     uint64_t offset = (x * ((VBE_mode_info->bpp)/8)) + (y * VBE_mode_info->pitch);
     framebuffer[offset]     =  (hexColor) & 0xFF;
     framebuffer[offset+1]   =  (hexColor >> 8) & 0xFF; 
@@ -299,7 +300,7 @@ void delete_char(void){
 }
 
 void clear_framebuffer(uint32_t color) {
-    uint8_t * framebuffer = (uint8_t *) VBE_mode_info->framebuffer;
+    uint8_t * framebuffer = (uint8_t *)(uintptr_t) VBE_mode_info->framebuffer;
     int width = get_screen_width();
     int height = get_screen_height();
     int bpp = VBE_mode_info->bpp / 8;
@@ -353,7 +354,7 @@ void changeFontSize() {
 }
 
 void scroll_screen(uint32_t bg_color) {
-    uint8_t * framebuffer = (uint8_t *) VBE_mode_info->framebuffer;
+    uint8_t * framebuffer = (uint8_t *)(uintptr_t) VBE_mode_info->framebuffer;
     int width = get_screen_width();
     int height = get_screen_height();
     int bpp = VBE_mode_info->bpp / 8;

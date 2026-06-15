@@ -112,6 +112,11 @@ char readNext() {
     return ret;
 }
 
+void keyboard_clear_wait(uint16_t pid) {
+	if (keyboard_waiting_pid == (int16_t)pid)
+		keyboard_waiting_pid = -1;
+}
+
 char readNextBlocking() {
 	char c = readNext();
 	while (c == 0) {
