@@ -117,6 +117,10 @@ void keyboard_clear_wait(uint16_t pid) {
 		keyboard_waiting_pid = -1;
 }
 
+void keyboard_flush(void) {
+	nextToRead = currentKey;
+}
+
 char readNextBlocking() {
 	char c = readNext();
 	while (c == 0) {
@@ -193,6 +197,7 @@ void keyboard_handler(uint64_t rsp) {
 	if (ctrl && key < KEYS && key <= MAX_PRESS_KEY) {
 		char base = keyValues[key][0];
 		if (base == 'c') {
+			keyboard_flush();
 			kill_foreground_process();
 			return;
 		}

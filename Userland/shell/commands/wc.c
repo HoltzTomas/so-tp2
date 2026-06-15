@@ -5,6 +5,7 @@ static int wc_func(int argc, char **argv) {
 	int c;
 	int line_count = 0;
 	while ((c = getchar()) != (uint8_t)EOF_CHAR) {
+		putchar((char)c);
 		if (c == '\n')
 			line_count++;
 	}
