@@ -72,7 +72,7 @@ El kernel soporta dos memory managers intercambiables por flag de compilación:
 | `clear` | Limpia la pantalla |
 | `time` | Muestra fecha y hora |
 | `mem` | Información de memoria (total/usada/libre) |
-| `ps` | Lista procesos (PID, PPID, prioridad, estado) |
+| `ps` | Lista procesos (PID, PPID, prioridad, estado, RSP, RBP, foreground) |
 
 ### Gestión de procesos
 | Comando | Descripción |
@@ -99,11 +99,10 @@ El kernel soporta dos memory managers intercambiables por flag de compilación:
 ### Tests de la cátedra
 | Comando | Descripción |
 |---------|-------------|
-| `test-mm <bytes>` | Test memory manager (alloc/memset/check/free loop) |
-| `test-processes <N>` | Test procesos (create/kill/block/unblock random) |
-| `test-synchro <N>` | Test sync CON semáforos (global debe ser 0) |
-| `test-no-synchro <N>` | Test sync SIN semáforos (demuestra race condition) |
-| `test-prio` | Test scheduling con prioridades |
+| `test_mm <bytes>` | Test memory manager (alloc/memset/check/free loop) |
+| `test_proc <N>` | Test procesos (create/kill/block/unblock random) |
+| `test_sync <N> <use_sem>` | Test sync (1=con semáforos, 0=sin) |
+| `test_prio` | Test scheduling con prioridades |
 
 ### Excepciones
 | Comando | Descripción |
