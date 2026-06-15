@@ -71,6 +71,28 @@ void *list_remove(List *list, Node *node) {
     return data;
 }
 
+void list_move_to_tail(List *list, Node *node) {
+    if (!node || node == list->tail)
+        return;
+
+    if (node->prev)
+        node->prev->next = node->next;
+    else
+        list->head = node->next;
+
+    if (node->next)
+        node->next->prev = node->prev;
+
+    node->prev = list->tail;
+    node->next = NULL;
+    if (list->tail)
+        list->tail->next = node;
+    list->tail = node;
+
+    if (!list->head)
+        list->head = node;
+}
+
 Node *list_get_first(List *list) {
     return list->head;
 }

@@ -13,7 +13,7 @@ uint32_t GetUint(void) {
 
 uint32_t GetUniform(uint32_t max) {
 	uint32_t u = GetUint();
-	return (u + 1.0) * 2.328306435454494e-10 * max;
+	return (uint32_t)(((uint64_t)u * (uint64_t)max) >> 32);
 }
 
 uint8_t memcheck(void *start, uint8_t value, uint32_t size) {

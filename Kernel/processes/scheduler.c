@@ -159,17 +159,21 @@ int8_t set_priority(uint16_t pid, uint8_t new_priority) {
     Process *process = (Process *)node->data;
 
     if (process->status == READY || process->status == RUNNING) {
-        list_remove(&scheduler.ready_queues[process->priority], node);
+        if (process->priority == new_priority) {
+            list_move_to_tail(&scheduler.ready_queues[new_priority], node);
+        } else {
+            list_remove(&scheduler.ready_queues[process->priority], node);
 
-        node = list_append(&scheduler.ready_queues[new_priority], process);
-        if (node == NULL) {
-            scheduler.processes[pid] = NULL;
-            scheduler.num_processes--;
-            free_process(process);
-            mm_free(process);
-            return -1;
+            node = list_append(&scheduler.ready_queues[new_priority], process);
+            if (node == NULL) {
+                scheduler.processes[pid] = NULL;
+                scheduler.num_processes--;
+                free_process(process);
+                mm_free(process);
+                return -1;
+            }
+            scheduler.processes[pid] = node;
         }
-        scheduler.processes[pid] = node;
     }
 
     process->priority = new_priority;
