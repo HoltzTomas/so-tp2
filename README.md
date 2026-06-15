@@ -2,6 +2,15 @@
 
 Kernel de sistema operativo de 64 bits sobre x86-64 bare metal. Implementa gestión de memoria, procesos con context switch, scheduler con prioridades, semáforos, pipes, keyboard driver bloqueante y una shell interactiva con 20 comandos.
 
+## Integrantes
+
+| Nombre | Email | Legajo |
+|--------|-------|--------|
+| Tomas Holtz | tholtz@itba.edu.ar | 65395 |
+| Manuel Pandelo | mpandelo@itba.edu.ar | 65748 |
+| Alvaro Capridi | acapridi@itba.edu.ar | 64206 |
+| Lucas Desmery | ldesmery@itba.edu.ar | 65663 |
+
 ## Requisitos
 
 - **Docker** (imagen `agodio/itba-so-multiarch:3.1`)
