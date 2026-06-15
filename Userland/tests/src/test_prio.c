@@ -3,51 +3,79 @@
 #include <stdlib.h>
 #include <test_util.h>
 
-#define MINOR_WAIT 100000
-#define WAIT_TICKS 90
+#define TOTAL_PROCESSES 3
+#define LOWEST 0
+#define MEDIUM 2
+#define HIGHEST 4
 
-static int64_t prio[4];
+static int64_t prio[TOTAL_PROCESSES] = {LOWEST, MEDIUM, HIGHEST};
+static uint64_t max_value = 0;
 
-static int endless_loop_print(int argc, char *argv[]) {
-	int64_t pid = (int64_t)sys_getpid();
-	while (1) {
-		printf("%d ", (int)pid);
-		bussy_wait(MINOR_WAIT);
-	}
+static int zero_to_max(int argc, char *argv[]) {
+	uint64_t value = 0;
+	while (value++ != max_value)
+		;
+	printf("PROCESS %d DONE!\n", (int)sys_getpid());
 	return 0;
 }
 
 int test_prio(int argc, char *argv[]) {
+	int64_t pids[TOTAL_PROCESSES];
+	char *ztm_argv[] = {0};
 	int16_t default_fds[3] = {STDIN, STDOUT, STDERR};
-	char *argvAux[] = {0};
 
-	printf("Creating 4 processes with same priority...\n");
+	if (argc != 1)
+		return -1;
 
-	for (int i = 0; i < 4; i++) {
-		prio[i] = sys_create_process(
-			(MainFunction)endless_loop_print, argvAux, "prio_test", 0, default_fds);
-		if (prio[i] < 0) {
+	if ((max_value = (uint64_t)satoi(argv[0])) <= 0)
+		return -1;
+
+	printf("SAME PRIORITY...\n");
+	for (int i = 0; i < TOTAL_PROCESSES; i++) {
+		pids[i] = sys_create_process(
+			(MainFunction)zero_to_max, ztm_argv, "zero_to_max", 0, default_fds);
+		if (pids[i] < 0) {
 			printf("test_prio: ERROR creating process\n");
 			return -1;
 		}
 	}
 
-	sys_sleep(WAIT_TICKS);
-	printf("\nChanging priorities...\n");
-	printf("PID %d -> prio 0, PID %d -> prio 1, PID %d -> prio 2, PID %d -> prio 3\n",
-	       (int)prio[0], (int)prio[1], (int)prio[2], (int)prio[3]);
+	for (int i = 0; i < TOTAL_PROCESSES; i++)
+		sys_waitpid((uint16_t)pids[i]);
 
-	for (int i = 0; i < 4; i++) {
-		sys_nice((uint16_t)prio[i], (uint8_t)i);
+	printf("\nSAME PRIORITY, THEN CHANGE IT...\n");
+	for (int i = 0; i < TOTAL_PROCESSES; i++) {
+		pids[i] = sys_create_process(
+			(MainFunction)zero_to_max, ztm_argv, "zero_to_max", 0, default_fds);
+		if (pids[i] < 0) {
+			printf("test_prio: ERROR creating process\n");
+			return -1;
+		}
+		sys_nice((uint16_t)pids[i], (uint8_t)prio[i]);
+		printf("  PROCESS %d NEW PRIORITY: %d\n", (int)pids[i], (int)prio[i]);
 	}
 
-	sys_sleep(WAIT_TICKS);
-	printf("\nKilling test processes...\n");
+	for (int i = 0; i < TOTAL_PROCESSES; i++)
+		sys_waitpid((uint16_t)pids[i]);
 
-	for (int i = 0; i < 4; i++) {
-		sys_kill((uint16_t)prio[i], -1);
-		sys_waitpid((uint16_t)prio[i]);
+	printf("\nSAME PRIORITY, THEN CHANGE IT WHILE BLOCKED...\n");
+	for (int i = 0; i < TOTAL_PROCESSES; i++) {
+		pids[i] = sys_create_process(
+			(MainFunction)zero_to_max, ztm_argv, "zero_to_max", 0, default_fds);
+		if (pids[i] < 0) {
+			printf("test_prio: ERROR creating process\n");
+			return -1;
+		}
+		sys_block((uint16_t)pids[i]);
+		sys_nice((uint16_t)pids[i], (uint8_t)prio[i]);
+		printf("  PROCESS %d NEW PRIORITY: %d\n", (int)pids[i], (int)prio[i]);
 	}
+
+	for (int i = 0; i < TOTAL_PROCESSES; i++)
+		sys_unblock((uint16_t)pids[i]);
+
+	for (int i = 0; i < TOTAL_PROCESSES; i++)
+		sys_waitpid((uint16_t)pids[i]);
 
 	printf("test_prio: done\n");
 	return 0;

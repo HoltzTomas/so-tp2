@@ -102,7 +102,7 @@ El kernel soporta dos memory managers intercambiables por flag de compilación:
 | `test_mm <bytes>` | Test memory manager (alloc/memset/check/free loop) |
 | `test_proc <N>` | Test procesos (create/kill/block/unblock random) |
 | `test_sync <N> <use_sem>` | Test sync (1=con semáforos, 0=sin) |
-| `test_prio` | Test scheduling con prioridades |
+| `test_prio <max_value>` | Test scheduling con prioridades (cuenta de 0 a max_value) |
 
 ### Excepciones
 | Comando | Descripción |

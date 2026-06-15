@@ -10,7 +10,8 @@ int64_t global;
 
 static void slowInc(int64_t *p, int64_t inc) {
 	int64_t aux = *p;
-	sys_yield();
+	if (GetUniform(100) < 30)
+		sys_yield();
 	aux += inc;
 	*p = aux;
 }
