@@ -36,5 +36,6 @@ char readNext();
 char readNextBlocking();
 char isFKey(unsigned int key);
 char isSpecialKey(unsigned int key);
+void keyboard_clear_wait(uint16_t pid);
 
 #endif

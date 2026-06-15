@@ -4,6 +4,7 @@
 #include <memoryManager.h>
 #include <globals.h>
 #include <pipe.h>
+#include <keyboardDriver.h>
 
 static uint16_t get_next_pid(void);
 
@@ -32,12 +33,9 @@ void *schedule(void *current_rsp) {
     if (scheduler.kill_fg_flag) {
         scheduler.kill_fg_flag = 0;
 
-        if (scheduler.current_pid != IDLE_PID &&
-            scheduler.processes[scheduler.current_pid] != NULL) {
-            Process *current = (Process *)scheduler.processes[scheduler.current_pid]->data;
-
-            if (current->file_descriptors[0] == STDIN)
-                kill_current_process(-1);
+        uint16_t fg = scheduler.foreground_pid;
+        if (fg != 0 && fg != IDLE_PID && scheduler.processes[fg] != NULL) {
+            kill_process(fg, -1);
         }
     }
 
@@ -254,6 +252,8 @@ int32_t kill_process(uint16_t pid, int32_t retval) {
             pipe_close(pid, (uint16_t)process->file_descriptors[i]);
         }
     }
+
+    keyboard_clear_wait(pid);
 
     process->status = ZOMBIE;
     process->return_value = retval;
