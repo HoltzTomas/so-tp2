@@ -36,6 +36,15 @@ void *schedule(void *current_rsp) {
         uint16_t fg = scheduler.foreground_pid;
         if (fg != 0 && fg != IDLE_PID && scheduler.processes[fg] != NULL) {
             kill_process(fg, -1);
+        } else if (fg == 0) {
+            for (uint16_t i = 2; i < MAX_PROCESSES; i++) {
+                if (scheduler.processes[i] != NULL) {
+                    Process *p = (Process *)scheduler.processes[i]->data;
+                    if (p->status != ZOMBIE && p->file_descriptors[0] == STDIN) {
+                        kill_process(i, -1);
+                    }
+                }
+            }
         }
     }
 

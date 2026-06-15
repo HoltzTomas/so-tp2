@@ -165,7 +165,9 @@ static void execute_single(Command *cmd, int is_background) {
             cmd_ptr->func(cmd->arg_count, cmd->args);
             return;
         }
-        sys_waitpid((uint16_t)pid);
+        int64_t ret = sys_waitpid((uint16_t)pid);
+        if (ret != 0)
+            putchar('\n');
     }
 }
 
